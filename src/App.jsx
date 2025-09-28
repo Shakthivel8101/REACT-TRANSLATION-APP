@@ -24,8 +24,10 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
-
-  const apiKey = (import.meta.env.VITE_RAPIDAPI_KEY || '').trim();
+  const [apiKey, setApiKey] = useState(
+    (import.meta.env.VITE_RAPIDAPI_KEY || localStorage.getItem('rapidapi_key') || '').trim()
+  );
+  const [tempKey, setTempKey] = useState('');
 
   const swapLanguages = () => {
     setSourceLang(targetLang);
@@ -41,7 +43,7 @@ function App() {
     }
 
     if (!apiKey) {
-      setError('Missing RapidAPI key. Create a .env file with VITE_RAPIDAPI_KEY=your_key and restart the dev server.');
+      setError('Missing RapidAPI key. Enter your key below and click Save, or add VITE_RAPIDAPI_KEY as a build secret.');
       return;
     }
 
@@ -107,8 +109,36 @@ function App() {
         </div>
 
         {!apiKey && (
-          <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 text-amber-800 p-3 text-sm">
-            No API key detected. Add <code className="px-1 py-0.5 bg-amber-100 rounded">VITE_RAPIDAPI_KEY</code> to a <code className="px-1 py-0.5 bg-amber-100 rounded">.env</code> file and restart the dev server.
+          <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 text-amber-800 p-4 text-sm space-y-3">
+            <div>
+              No API key detected. You can either:
+              <ul className="list-disc pl-5 mt-1 space-y-1">
+                <li>Add <code className="px-1 py-0.5 bg-amber-100 rounded">VITE_RAPIDAPI_KEY</code> as a GitHub Action secret and redeploy</li>
+                <li>Or paste your key below to use it immediately (stored in your browser only)</li>
+              </ul>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="password"
+                className="flex-1 rounded-md border border-amber-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                placeholder="Paste your RapidAPI key"
+                value={tempKey}
+                onChange={(e) => setTempKey(e.target.value)}
+              />
+              <button
+                onClick={() => {
+                  const k = tempKey.trim();
+                  if (!k) return;
+                  localStorage.setItem('rapidapi_key', k);
+                  setApiKey(k);
+                  setTempKey('');
+                  setError('');
+                }}
+                className="inline-flex items-center justify-center rounded-md bg-amber-600 px-4 py-2 text-white hover:bg-amber-700"
+              >
+                Save Key
+              </button>
+            </div>
           </div>
         )}
 
@@ -235,8 +265,8 @@ function App() {
         )}
 
         <footer className="mt-12 text-center text-sm text-gray-500">
-          <p>Powered by MyMemory Translation API via RapidAPI</p>
-          <p className="mt-1">Add your RapidAPI key in a <code className="px-1 py-0.5 bg-gray-100 rounded">.env</code> file as <code className="px-1 py-0.5 bg-gray-100 rounded">VITE_RAPIDAPI_KEY</code> and restart the dev server.</p>
+          <p>Powered by RapidAPI</p>
+          <p className="mt-1">You can supply the key at build time (VITE_RAPIDAPI_KEY) or paste it in the banner above.</p>
         </footer>
       </div>
     </div>
